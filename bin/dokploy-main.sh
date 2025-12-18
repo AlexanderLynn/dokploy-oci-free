@@ -17,8 +17,19 @@ systemctl status sshd
 sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 systemctl restart sshd
 
-# Install Dokploy
-curl -sSL https://dokploy.com/install.sh | sh
+# Install Dokploy with retry (up to 3 minutes, every 15 seconds)
+DOKPLOY_INSTALL_URL="https://dokploy.com/install.sh"
+MAX_ATTEMPTS=12
+ATTEMPT=1
+until (curl -fsSL "${DOKPLOY_INSTALL_URL}" | sh); do
+  if [ "${ATTEMPT}" -ge "${MAX_ATTEMPTS}" ]; then
+    echo "Dokploy install failed after ${MAX_ATTEMPTS} attempts."
+    exit 1
+  fi
+  echo "Dokploy install failed (attempt ${ATTEMPT}/${MAX_ATTEMPTS}). Retrying in 15 seconds..."
+  ATTEMPT=$((ATTEMPT + 1))
+  sleep 15
+done
 
 # Allow Docker Swarm traffic
 ufw allow 80,443,3000,996,7946,4789,2377/tcp
