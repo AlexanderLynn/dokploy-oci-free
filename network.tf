@@ -44,29 +44,7 @@ resource "oci_core_security_list" "dokploy_security_list" {
   vcn_id         = oci_core_vcn.dokploy_vcn.id
   display_name   = "Dokploy Security List"
 
-  # Ingress Rules for Dokploy
-  ingress_security_rules {
-    protocol = "6" # TCP
-    source   = "0.0.0.0/0"
-    tcp_options {
-      min = 3000
-      max = 3000
-    }
-    description = "Allow HTTP traffic for Dokploy on port 3000"
-  }
-
-  # SSH
-  ingress_security_rules {
-    protocol = "6" # TCP
-    source   = "0.0.0.0/0"
-    tcp_options {
-      min = 22
-      max = 22
-    }
-    description = "Allow SSH traffic on port 22"
-  }
-
-  # HTTP & HTTPS traffic
+  # Public ingress (Traefik + Dokploy UI)
   ingress_security_rules {
     protocol = "6" # TCP
     source   = "0.0.0.0/0"
@@ -74,7 +52,7 @@ resource "oci_core_security_list" "dokploy_security_list" {
       min = 80
       max = 80
     }
-    description = "Allow HTTP traffic on port 80"
+    description = "Allow HTTP traffic on port 80 (Traefik)"
   }
 
   ingress_security_rules {
@@ -84,104 +62,25 @@ resource "oci_core_security_list" "dokploy_security_list" {
       min = 443
       max = 443
     }
-    description = "Allow HTTPS traffic on port 443"
+    description = "Allow HTTPS traffic on port 443 (Traefik)"
   }
 
-  # ICMP traffic
   ingress_security_rules {
-    description = "ICMP traffic for 3, 4"
-    icmp_options {
-      code = "4"
-      type = "3"
+    protocol = "6" # TCP
+    source   = "0.0.0.0/0"
+    tcp_options {
+      min = 3000
+      max = 3000
     }
-    protocol    = "1"
-    source      = "0.0.0.0/0"
+    description = "Allow Dokploy web interface on port 3000"
+  }
+
+  # Internal-only traffic (limit to subnet CIDR because security lists cannot reference subnet IDs)
+  ingress_security_rules {
+    protocol    = "all"
+    source      = "10.0.0.0/24"
     source_type = "CIDR_BLOCK"
-    stateless   = "false"
-  }
-
-  ingress_security_rules {
-    description = "ICMP traffic for 3"
-    icmp_options {
-      code = "-1"
-      type = "3"
-    }
-    protocol    = "1"
-    source      = "10.0.0.0/16"
-    source_type = "CIDR_BLOCK"
-    stateless   = "false"
-  }
-
-  # Traefik Proxy
-  ingress_security_rules {
-    protocol = "6" # TCP
-    source   = "0.0.0.0/0"
-    tcp_options {
-      min = 81
-      max = 81
-    }
-    description = "Allow Traefik HTTP traffic on port 81"
-  }
-
-  ingress_security_rules {
-    protocol = "6" # TCP
-    source   = "0.0.0.0/0"
-    tcp_options {
-      min = 444
-      max = 444
-    }
-    description = "Allow Traefik HTTPS traffic on port 444"
-  }
-
-  # Ingress rules for Docker Swarm
-  ingress_security_rules {
-    protocol = "6" # TCP
-    source   = "0.0.0.0/0"
-    tcp_options {
-      min = 2376
-      max = 2376
-    }
-    description = "Allow Docker Swarm traffic on port 2376"
-  }
-
-  ingress_security_rules {
-    protocol = "6" # TCP
-    source   = "0.0.0.0/0"
-    tcp_options {
-      min = 2377
-      max = 2377
-    }
-    description = "Allow Docker Swarm traffic on port 2377"
-  }
-
-  ingress_security_rules {
-    protocol = "6" # TCP
-    source   = "0.0.0.0/0"
-    tcp_options {
-      min = 7946
-      max = 7946
-    }
-    description = "Allow Docker Swarm traffic on port 7946"
-  }
-
-  ingress_security_rules {
-    protocol = "17" # UDP
-    source   = "0.0.0.0/0"
-    udp_options {
-      min = 7946
-      max = 7946
-    }
-    description = "Allow Docker Swarm UDP traffic on port 7946"
-  }
-
-  ingress_security_rules {
-    protocol = "17" # UDP
-    source   = "0.0.0.0/0"
-    udp_options {
-      min = 4789
-      max = 4789
-    }
-    description = "Allow Docker Swarm UDP traffic on port 4789"
+    description = "Allow all internal traffic within the Dokploy subnet"
   }
 
   # Egress Rule (optional, if needed)

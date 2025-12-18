@@ -3,6 +3,13 @@ resource "oci_core_instance" "dokploy_main" {
   display_name        = "dokploy-main-${random_string.resource_code.result}"
   compartment_id      = var.compartment_id
   availability_domain = var.availability_domain_main
+  depends_on = [
+    oci_core_vcn.dokploy_vcn,
+    oci_core_subnet.dokploy_subnet,
+    oci_core_security_list.dokploy_security_list,
+    oci_core_internet_gateway.dokploy_internet_gateway,
+    oci_core_default_route_table.dokploy_default_route_table,
+  ]
 
   is_pv_encryption_in_transit_enabled = local.instance_config.is_pv_encryption_in_transit_enabled
   shape                               = local.instance_config.shape
@@ -91,6 +98,13 @@ resource "oci_core_instance" "dokploy_worker" {
   display_name        = "dokploy-worker-${count.index + 1}-${random_string.resource_code.result}"
   compartment_id      = var.compartment_id
   availability_domain = var.availability_domain_workers[count.index % length(var.availability_domain_workers)]
+  depends_on = [
+    oci_core_vcn.dokploy_vcn,
+    oci_core_subnet.dokploy_subnet,
+    oci_core_security_list.dokploy_security_list,
+    oci_core_internet_gateway.dokploy_internet_gateway,
+    oci_core_default_route_table.dokploy_default_route_table,
+  ]
 
   is_pv_encryption_in_transit_enabled = local.instance_config.is_pv_encryption_in_transit_enabled
   shape                               = local.instance_config.shape
