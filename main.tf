@@ -90,7 +90,7 @@ resource "oci_core_instance" "dokploy_worker" {
 
   display_name        = "dokploy-worker-${count.index + 1}-${random_string.resource_code.result}"
   compartment_id      = var.compartment_id
-  availability_domain = var.availability_domain_workers
+  availability_domain = var.availability_domain_workers[count.index % length(var.availability_domain_workers)]
 
   is_pv_encryption_in_transit_enabled = local.instance_config.is_pv_encryption_in_transit_enabled
   shape                               = local.instance_config.shape

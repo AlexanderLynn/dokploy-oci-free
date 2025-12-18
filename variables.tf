@@ -25,8 +25,13 @@ variable "availability_domain_main" {
 }
 
 variable "availability_domain_workers" {
-  description = "Availability domain for dokploy-main instance. Find it Core Infrastructure → Compute → Instances → Availability domain (left menu). For example: WBJv:EU-FRANKFURT-1-AD-2"
-  type        = string
+  description = "Availability domains for dokploy worker instances. Find it Core Infrastructure → Compute → Instances → Availability domain (left menu). For example: [\"WBJv:EU-FRANKFURT-1-AD-2\", \"WBJv:EU-FRANKFURT-1-AD-3\"]"
+  type        = list(string)
+
+  validation {
+    condition     = length(var.availability_domain_workers) > 0
+    error_message = "availability_domain_workers must contain at least one availability domain."
+  }
 }
 
 variable "instance_shape" {
